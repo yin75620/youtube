@@ -16,8 +16,8 @@ func ExampleClient_GetStream() {
 
 	// Typically youtube only provides separate streams for video and audio.
 	// If you want audio and video combined, take a look a the downloader package.
-	format := video.Formats.FindByQuality("medium")
-	reader, _, err := testClient.GetStream(video, format)
+	formats := video.Formats.Quality("medium")
+	reader, _, err := testClient.GetStream(video, &formats[0])
 	if err != nil {
 		panic(err)
 	}
@@ -28,19 +28,19 @@ func ExampleClient_GetStream() {
 }
 
 func TestSimpleTest(t *testing.T) {
-
 	video, err := testClient.GetVideo("https://www.youtube.com/watch?v=9_MbW9FK1fA")
 	require.NoError(t, err, "get body")
 
-	_, err = testClient.GetTranscript(video)
+	_, err = testClient.GetTranscript(video, "en")
 	require.NoError(t, err, "get transcript")
 
 	// Typically youtube only provides separate streams for video and audio.
 	// If you want audio and video combined, take a look a the downloader package.
-	format := video.Formats.FindByQuality("hd1080")
+	formats := video.Formats.Quality("hd1080")
+	require.NotEmpty(t, formats)
 
 	start := time.Now()
-	reader, _, err := testClient.GetStream(video, format)
+	reader, _, err := testClient.GetStream(video, &formats[0])
 	require.NoError(t, err, "get stream")
 
 	t.Log("Duration Milliseconds: ", time.Since(start).Milliseconds())
@@ -53,7 +53,6 @@ func TestSimpleTest(t *testing.T) {
 }
 
 func TestDownload_Regular(t *testing.T) {
-
 	testcases := []struct {
 		name       string
 		url        string
@@ -111,15 +110,13 @@ func TestDownload_Regular(t *testing.T) {
 			video, err := testClient.GetVideo(tc.url)
 			require.NoError(err)
 
-			var format *Format
+			formats := video.Formats
 			if tc.itagNo > 0 {
-				format = video.Formats.FindByItag(tc.itagNo)
-				require.NotNil(format)
-			} else {
-				format = &video.Formats[0]
+				formats = formats.Itag(tc.itagNo)
+				require.NotEmpty(formats)
 			}
 
-			url, err := testClient.GetStreamURL(video, format)
+			url, err := testClient.GetStreamURL(video, &video.Formats[0])
 			require.NoError(err)
 			require.NotEmpty(url)
 		})
@@ -139,7 +136,7 @@ func TestDownload_WhenPlayabilityStatusIsNotOK(t *testing.T) {
 		},
 		{
 			issue:   "issue#59",
-			videoID: "nINQjT7Zr9w",
+			videoID: "yZIXLfi8CZQ",
 			err:     ErrVideoPrivate.Error(),
 		},
 	}

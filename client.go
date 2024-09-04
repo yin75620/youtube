@@ -174,7 +174,7 @@ var (
 	// WebClient, better to use Android client but go ahead.
 	WebClient = clientInfo{
 		name:      "WEB",
-		version:   "2.20210617.01.00",
+		version:   "2.20220801.00.00",
 		key:       "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8",
 		userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
 	}
@@ -182,9 +182,9 @@ var (
 	// AndroidClient, download go brrrrrr.
 	AndroidClient = clientInfo{
 		name:           "ANDROID",
-		version:        "17.31.35",
+		version:        "18.11.34",
 		key:            "AIzaSyA8eiZmM1FaDVjRy-df2KTyQ_vz_yYM39w",
-		userAgent:      "com.google.android.youtube/17.31.35 (Linux; U; Android 11) gzip",
+		userAgent:      "com.google.android.youtube/18.11.34 (Linux; U; Android 11) gzip",
 		androidVersion: 30,
 	}
 
@@ -215,10 +215,10 @@ func (c *Client) videoDataByInnertube(ctx context.Context, id string) ([]byte, e
 	return c.httpPostBodyBytes(ctx, "https://www.youtube.com/youtubei/v1/player?key="+c.client.key, data)
 }
 
-func (c *Client) transcriptDataByInnertube(ctx context.Context, id string) ([]byte, error) {
+func (c *Client) transcriptDataByInnertube(ctx context.Context, id string, lang string) ([]byte, error) {
 	data := innertubeRequest{
 		Context: prepareInnertubeContext(*c.client),
-		Params:  transcriptVideoID(id),
+		Params:  transcriptVideoID(id, lang),
 	}
 
 	return c.httpPostBodyBytes(ctx, "https://www.youtube.com/youtubei/v1/get_transcript?key="+c.client.key, data)
@@ -261,8 +261,8 @@ func prepareInnertubePlaylistData(ID string, continuation bool, clientInfo clien
 }
 
 // transcriptVideoID encodes the video ID to the param used to fetch transcripts.
-func transcriptVideoID(videoID string) string {
-	langCode := encTranscriptLang("en")
+func transcriptVideoID(videoID string, lang string) string {
+	langCode := encTranscriptLang(lang)
 
 	// This can be optionally appened to the Sprintf str, not sure what it means
 	// *3engagement-panel-searchable-transcript-search-panel\x30\x00\x38\x01\x40\x01
